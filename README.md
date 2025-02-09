@@ -14,7 +14,7 @@ A lightweight and easy-to-use **JWT authentication** package for FastAPI applica
 ## **Installation**  
 Install the package via `pip`:  
 ```bash
-pip install fastapi-jwtauth-handler
+pip install fastapi-jwtauth
 ```
 
 ---
@@ -24,14 +24,21 @@ pip install fastapi-jwtauth-handler
 ### **1. Initialize the Auth Module**  
 Import and initialize the authentication handler in your FastAPI app:  
 ```python
-from fastapi import FastAPI, Depends
-from fastapi_jwtauth_handler import AuthHandler, UserModel
 
-app = FastAPI()
-auth = AuthHandler()
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from fastapi_jwtauth.jwtauth.config import configure 
 
-# Initialize models (if using a database)
-auth.init_models()
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+#setup the package
+base=configure(Base, SessionLocal)
+
+base.metadata.create_all(bind=engine) #create all models
+
 ```
 
 ---
@@ -39,9 +46,25 @@ auth.init_models()
 ### **2. User Registration**  
 Register a new user with **automatic password hashing**:  
 ```python
+from pydantic import BaseModel
+from fastapi_jwtauth.jwtauth.utils import UserRegistration
+
+
+class UserRegister(BaseModel):
+    first_name:str
+    last_name:str
+    email:str
+    username:str
+    password:str
+    confirm_password:str
+
+
+
 @app.post("/register")
-def register(user: UserModel):
-    return auth.register_user(user)
+def register(userdetails:UserRegister):
+    usrreg = UserRegistration(**userdetails.model_dump())
+    usrreg.save()
+    return {"message": "User registered successfully!"}
 ```
 
 ---
@@ -49,9 +72,12 @@ def register(user: UserModel):
 ### **3. User Login & Token Generation**  
 Authenticate users and issue JWT tokens:  
 ```python
+from fastapi_jwtauth.jwtauth.utils import jwt_login
+
 @app.post("/login")
-def login(user: UserModel):
-    return auth.login_user(user)
+def login(username:str,password:str):
+    tokens = jwt_login(username,password)
+    return tokens
 ```
 
 ---
@@ -69,9 +95,12 @@ def protected_route(user=Depends(auth.get_current_user)):
 ### **5. Token Refresh**  
 Refresh expired access tokens using a refresh token:  
 ```python
+from fastapi_jwtauth.jwtauth.utils import jwt_refresh_tokens
+
 @app.post("/refresh")
-def refresh_token(token: str):
-    return auth.refresh_token(token)
+def refresh_tokens(request:Request, refreshtokens:RefreshTokens, db: Annotated[Session, Depends(get_db)]):
+    refresh_tokens = jwt_refresh_tokens(username=refreshtokens.username, refresh_token=refreshtokens.refresh_token, grant_type=refreshtokens.grant_type)
+    return refresh_tokens
 ```
 
 ---
@@ -79,15 +108,17 @@ def refresh_token(token: str):
 ### **6. User Logout**  
 Invalidate user sessions and tokens:  
 ```python
+from fastapi_jwtauth.jwtauth.utils import jwt_logout
+
 @app.post("/logout")
 def logout(token: str):
-    return auth.logout_user(token)
+    return jwt_logout(token)
 ```
 
 ---
 
 ## **Configuration**  
-You can customize JWT settings via environment variables or a config file:  
+You can customize JWT settings via environment variables or DB tables:  
 ```python
 auth = AuthHandler(secret_key="your-secret-key", access_token_expiry=15, refresh_token_expiry=60)
 ```
