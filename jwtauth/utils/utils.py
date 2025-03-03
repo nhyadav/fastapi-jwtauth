@@ -9,6 +9,7 @@ from .helpers import (generate_access_token,
                      validate_refresh_token,
                      jwt_logout_user)
 
+
 class UserRegistration:
     def __init__(self, 
                  username:str,
@@ -136,4 +137,5 @@ def jwt_refresh_tokens(username:str, refresh_token:str, grant_type:str="refresh_
 @validate_arguments
 def jwt_logout(username:str) -> Dict[str,Any]:
     return jwt_logout_user(username)
-        
+
+

@@ -1,1 +1,1 @@
-from .settings import configure
+from .settings import configure_db

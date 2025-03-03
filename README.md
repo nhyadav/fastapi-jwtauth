@@ -82,17 +82,9 @@ def login(username:str,password:str):
 
 ---
 
-### **4. Protected Routes (JWT Required)**  
-Secure API endpoints using JWT authentication:  
-```python
-@app.get("/protected")
-def protected_route(user=Depends(auth.get_current_user)):
-    return {"message": "You have access!", "user": user}
-```
-
 ---
 
-### **5. Token Refresh**  
+### **4. Token Refresh**  
 Refresh expired access tokens using a refresh token:  
 ```python
 from fastapi_jwtauth.jwtauth.utils import jwt_refresh_tokens
@@ -105,7 +97,7 @@ def refresh_tokens(request:Request, refreshtokens:RefreshTokens, db: Annotated[S
 
 ---
 
-### **6. User Logout**  
+### **5. User Logout**  
 Invalidate user sessions and tokens:  
 ```python
 from fastapi_jwtauth.jwtauth.utils import jwt_logout
@@ -120,7 +112,9 @@ def logout(token: str):
 ## **Configuration**  
 You can customize JWT settings via environment variables or DB tables:  
 ```python
-auth = AuthHandler(secret_key="your-secret-key", access_token_expiry=15, refresh_token_expiry=60)
+from fastapi_jwtauth.jwtauth.utils.jwtauth import JWTAuthHandler
+
+auth = JWTAuthHandler(secret_key="your-secret-key", access_token_expiry=15, refresh_token_expiry=60)
 ```
 
 | **Setting**  | **Description** | **Default** |

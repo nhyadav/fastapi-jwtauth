@@ -1,7 +1,6 @@
 from datetime import datetime,UTC
 from typing import Dict, List, Any
 from fastapi_jwtauth.jwtauth.models import Users, JwtTokens
-from fastapi_jwtauth.jwtauth.models import EnvVarsModel,JwtAccessTokenPayload
 from fastapi_jwtauth.jwtauth.db.database import db_config
 
 SessionLocal = db_config.get_session()
